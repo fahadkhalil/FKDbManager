@@ -149,7 +149,7 @@ namespace FKDbManager
                 cmd.ExecuteNonQuery();
                 cmd.Dispose();
 
-                c = "RESTORE DATABASE [TUTS] FROM  DISK = N'" + file + "' WITH  FILE = 1,  NOUNLOAD,  REPLACE,  STATS = 5";
+                c = "RESTORE DATABASE [" + db + "] FROM  DISK = N'" + file + "' WITH  FILE = 1,  NOUNLOAD,  REPLACE,  STATS = 5";
                 cmd = new SqlCommand
                 {
                     CommandText = c,
