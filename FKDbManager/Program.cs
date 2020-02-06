@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
+using System.Diagnostics;
+using System.IO;
 
 namespace FKDbManager
 {
@@ -30,8 +32,8 @@ namespace FKDbManager
             while (flag)
             {
                 String command = "";
-
-                Console.Write("[l=list] [b=create] [r=restore] [q=bye] Command? ");
+                Echo(Properties.Settings.Default.Database + " >> ", ConsoleColor.White, ConsoleColor.Blue);
+                Echo("[l=list] [b=create] [r=restore] [o=open storage folder] [c=config file] [q=bye] Command? ", ConsoleColor.Gray);
                 command = Console.ReadLine();
 
                 switch (command)
@@ -41,48 +43,59 @@ namespace FKDbManager
                         break;
                     case "b":
                         String label = "";
-                        Echo("+++++++++++++++++++++++++++++++++++", ConsoleColor.Green);
-                        Echo("Label: ", ConsoleColor.Green);
+                        EchoLine("+++++++++++++++++++++++++++++++++++", ConsoleColor.Green);
+                        EchoLine("Label: ", ConsoleColor.Green);
                         label = Console.ReadLine();
 
                         string fileName = Properties.Settings.Default.Database + "-" + label + ".bak";
-                        Echo("+++++++++++++++++++++++++++++++++++", ConsoleColor.Yellow);
-                        Echo("Creating... " + fileName, ConsoleColor.Green);
+                        EchoLine("+++++++++++++++++++++++++++++++++++", ConsoleColor.Yellow);
+                        EchoLine("Creating... " + fileName, ConsoleColor.Green);
 
                         Backup(backupFolder + "\\" + fileName);
 
-                        Echo("DONE", ConsoleColor.Green);
+                        EchoLine("DONE", ConsoleColor.Green);
 
                         break;
                     case "r":
                         var lst = ListFiles();
-                        Echo("Which one?", ConsoleColor.Magenta);
+                        EchoLine("Which one?", ConsoleColor.Magenta);
                         var ix = Console.ReadLine();
                         int index = -1;
                         int.TryParse(ix, out index);
-                        if (index - 1 >= lst.Count || index < 0)
+                        if (index - 1 >= lst.Count || index <= 0)
                         {
-                            Echo("Stoned or something?", ConsoleColor.Red);
+                            EchoLine("Stoned or something?", ConsoleColor.Red);
                             continue;
                         }
 
                         var file = lst[index - 1];
 
-                        Echo("+++++++++++++++++++++++++++++++++++", ConsoleColor.Magenta);
-                        Echo("Restoring (type: yes to continue): " + file, ConsoleColor.Magenta);
+                        EchoLine("+++++++++++++++++++++++++++++++++++", ConsoleColor.Magenta);
+                        EchoLine("Restoring (type: yes to continue): " + file, ConsoleColor.Magenta);
                         ix = Console.ReadLine();
 
                         if (ix.CompareTo("yes") == 0)
                             Restore(file);
 
-                        Echo("DONE", ConsoleColor.Magenta);
+                        EchoLine("DONE", ConsoleColor.Magenta);
 
                         break;
                     case "q":
                         flag = false;
                         break;
+
+                    case "o":
+                        EchoLine("Open: " + backupFolder, ConsoleColor.Yellow);
+                        Process.Start("explorer.exe", backupFolder);
+                        break;
+
+                    case "c":
+                        EchoLine("Open: " + Directory.GetCurrentDirectory(), ConsoleColor.Yellow);
+                        Process.Start("code", Directory.GetCurrentDirectory() + "\\FKDbManager.exe.config");
+                        break;
+
                     default:
-                        Echo("Meh?!", ConsoleColor.Cyan);
+                        EchoLine("Meh?!", ConsoleColor.Cyan);
                         break;
                 }
             }
@@ -120,12 +133,26 @@ namespace FKDbManager
 
             return lst;
         }
-        static void Echo(String msg, System.ConsoleColor c)
+
+        static void EchoLine(String msg, System.ConsoleColor c)
         {
             var f = Console.ForegroundColor;
             Console.ForegroundColor = c;
             Console.WriteLine(msg);
             Console.ForegroundColor = f;
+        }
+
+        static void Echo(String msg, System.ConsoleColor c, System.ConsoleColor b = ConsoleColor.Black)
+        {
+            var f = Console.ForegroundColor;
+            var bg = Console.BackgroundColor;
+
+            Console.ForegroundColor = c;
+            Console.BackgroundColor = b;
+            Console.Write(msg);
+
+            Console.ForegroundColor = f;
+            Console.BackgroundColor = bg;
         }
 
         static void Restore(string file)
